@@ -4,11 +4,14 @@ import ij.IJ;
 import ij.ImagePlus;
 import ij.plugin.filter.PlugInFilter;
 import ij.process.ImageProcessor;
+import java.util.Arrays;
 
 public class Project5_PlugIn implements PlugInFilter {
     
 	final int BLACK = 0;
 	final int WHITE = 255;
+	
+	final int r = 3; // specifies the size of the filter
 	
 	// Values for the masks
 	final double VALUE16 = 1.0 / 6.0;
@@ -51,31 +54,22 @@ public class Project5_PlugIn implements PlugInFilter {
     @Override
     public void run(ImageProcessor ip) {
         
-        int whichMethod = (int)IJ.getNumber("Which of the four Filters or combinations should be used? (Input: 1-6)", 1);
+        int whichMethod = (int)IJ.getNumber("Which of the three Filters or combinations should be used? (Input: 1-3)", 1);
         
         switch(whichMethod) {
-        // Filter h1
+        // Medianfilter
         case 1:
-        	filter(ip, h1);
+        	medianFilter(ip);
             break;
-        //Filter h2
+        //Morphologischen Öffnen
         case 2:
         	filter(ip, h2);
             break;
-        //Filter h3    
+        //Morpholohisches Schließen
         case 3:
         	filter(ip, h3);
         	break;
-        //Filter h4	
-        case 4:
-        	filter(ip, h4);
-        	break;
-        case 5:
-        	filter2(ip, h1, h2);
-        	break;
-        case 6:
-        	filter2(ip, h3, h4);
-        	break;
+       
             
         default:
         
@@ -131,4 +125,31 @@ public class Project5_PlugIn implements PlugInFilter {
         }
 	}
 
+	private void medianFilter(ImageProcessor ip) {
+		int N = ip.getHeight();
+		int M = ip.getWidth();
+		ImageProcessor copy = ip.duplicate();
+		// vector to hold pixels from (2r+1)x(2r+1) neighborhood:
+		int[] A = new int[(2 * r + 1) * (2 * r + 1)];
+		
+		// index of center vector element n = 2(r2 + r):
+		int n = 2 * (r * r + r);
+		
+		for (int u = r; u <= M - r - 2; u++) {
+			for (int v = r; v <= N - r - 2; v++) {
+				// fill the pixel vector A for filter position (u,v):
+				int k = 0;
+				for (int i = -r; i <= r; i++) {
+					for (int j = -r; j <= r; j++) {
+						A[k] = copy.getPixel(u + i, v + j);
+						k++;
+					}
+				}
+				// sort vector A and take the center element A[n]:
+				Arrays.sort(A);
+				ip.putPixel(u, v, A[n]);
+			}
+		}
+	}
+	
 }
