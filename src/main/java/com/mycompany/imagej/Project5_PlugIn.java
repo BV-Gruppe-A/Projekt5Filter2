@@ -13,37 +13,15 @@ public class Project5_PlugIn implements PlugInFilter {
 	
 	final int r = 3; // specifies the size of the filter
 	
-	// Values for the masks
-	final double VALUE16 = 1.0 / 6.0;
-	final double VALUE_MINUS16 = -1 * VALUE16;
-	final double VALUE18 = 1.0 / 8.0;
-	final double VALUE_MINUS18 = -1 * VALUE18;
-	final double VALUE28 = 2.0 / 8.0;
-	final double VALUE_MINUS28 = -1 * VALUE28;
+
 	 
-	final double [][] h1 = {
-			{VALUE_MINUS16, VALUE_MINUS16, 0},
-			{VALUE_MINUS16, 0, VALUE16},
-			{0, VALUE16, VALUE16}
+	final int [][] s1 = {
+			{1,1,1},
+			{1,2,1},
+			{1,1,1}
 	};
 	
-	final double [][] h2 = {
-			{0, VALUE16, VALUE16},
-			{VALUE_MINUS16, 0, VALUE16},
-			{VALUE_MINUS16, VALUE_MINUS16, 0}
-	};
-	
-	final double [][] h3 = {
-			{VALUE_MINUS28, VALUE_MINUS18, 0},
-			{VALUE_MINUS18, 0, VALUE18},
-			{0, VALUE18, VALUE28}
-	};
-	
-	final double [][] h4 = {
-			{0, VALUE18, VALUE28},
-			{VALUE_MINUS18, 0, VALUE18},
-			{VALUE_MINUS28, VALUE_MINUS18, 0}
-	};
+
     
     @Override    
     public int setup(String args, ImagePlus im) {  
@@ -63,11 +41,13 @@ public class Project5_PlugIn implements PlugInFilter {
             break;
         //Morphologischen Öffnen
         case 2:
-        	filter(ip, h2);
+        	erosion(ip, s1);
+        	dilation(ip, s1);
             break;
         //Morpholohisches Schließen
         case 3:
-        	filter(ip, h3);
+        	dilation(ip, s1);
+        	erosion(ip, s1);
         	break;
        
             
@@ -77,7 +57,7 @@ public class Project5_PlugIn implements PlugInFilter {
        
     }
 
-	private void filter(ImageProcessor ip, double[][] filter) {
+	private void dilation(ImageProcessor ip, int[][] se) {
         ImageProcessor copy = ip.duplicate();
         int M = ip.getWidth();
         int N = ip.getHeight();
@@ -85,21 +65,22 @@ public class Project5_PlugIn implements PlugInFilter {
         for (int u = 1; u <= M - 2; u++) {
 	        for (int v = 1; v <= N - 2; v++) {
 		        // compute filter result for position (u,v):
-		        double sum = 0;
+		        int max = 0;
 		        for (int i = -1; i <= 1; i++) {
 			        for (int j = -1; j <= 1; j++) {
-				        int p = copy.getPixel(u + i, v + j);
-				        // get the corresponding filter coefficient:
-				        double c = filter[j + 1][i + 1];
-				        sum = sum + c * p;
+				        int p = copy.getPixel(u + i, v + j) + se[i+1][j+1];
+				        // check for new max
+				        if(p > max) {
+				        	max = p;
+				        }
 			        }
 		        }
-	        int q = (int) Math.round(sum);
-	        ip.putPixel(u, v, q);
+	        ip.putPixel(u, v, max);
 	        }
         }
 	}
-	private void filter2(ImageProcessor ip, double[][] filter1, double[][] filter2) {
+
+	private void erosion(ImageProcessor ip, int[][] se) {
         ImageProcessor copy = ip.duplicate();
         int M = ip.getWidth();
         int N = ip.getHeight();
@@ -107,20 +88,17 @@ public class Project5_PlugIn implements PlugInFilter {
         for (int u = 1; u <= M - 2; u++) {
 	        for (int v = 1; v <= N - 2; v++) {
 		        // compute filter result for position (u,v):
-		        double sum1 = 0;
-		        double sum2 = 0;
+		        int min = 300;
 		        for (int i = -1; i <= 1; i++) {
 			        for (int j = -1; j <= 1; j++) {
-				        int p = copy.getPixel(u + i, v + j);
-				        // get the corresponding filter coefficient:
-				        double c1 = filter1[j + 1][i + 1];
-				        double c2 = filter2[j + 1][i + 1];
-				        sum1 = sum1 + c1 * p;
-				        sum2 = sum2 + c2 * p;
+				        int p = copy.getPixel(u + i, v + j) - se[i+1][j+1];
+				        // check for new max
+				        if(p < min) {
+				        	min = p;
+				        }
 			        }
 		        }
-	        int q = (int) Math.round(Math.sqrt(Math.pow(sum1, 2)+Math.pow(sum2, 2)));
-	        ip.putPixel(u, v, q);
+	        ip.putPixel(u, v, min);
 	        }
         }
 	}
