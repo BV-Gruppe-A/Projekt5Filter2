@@ -11,17 +11,16 @@ public class Project5_PlugIn implements PlugInFilter {
 	final int BLACK = 0;
 	final int WHITE = 255;
 	
-	final int r = 3; // specifies the size of the filter
-	
-
+	// specifies the size of the filter as a radius (r = 1 --> 3x3)
+	final int radius = 3;	
+	// specifies the amount of pixel left to each border (before the filter begins)
+	int pxToBorder = 2;
 	 
-	final int [][] s1 = {
+	final int [][] structure01 = {
 			{1,1,1},
 			{1,2,1},
 			{1,1,1}
 	};
-	
-
     
     @Override    
     public int setup(String args, ImagePlus im) {  
@@ -38,23 +37,24 @@ public class Project5_PlugIn implements PlugInFilter {
         // Medianfilter
         case 1:
         	medianFilter(ip);
-            break;
+        	pxToBorder = radius;
+        	break;
         //Morphologischen Öffnen
         case 2:
-        	erosion(ip, s1);
-        	dilation(ip, s1);
+        	erosion(ip, structure01);
+        	dilation(ip, structure01);
+        	pxToBorder = 2;
             break;
         //Morpholohisches Schließen
         case 3:
-        	dilation(ip, s1);
-        	erosion(ip, s1);
+        	dilation(ip, structure01);
+        	erosion(ip, structure01);
+        	pxToBorder = 2;
         	break;
-       
-            
-        default:
-        
+        default:       
         }
-       
+        
+        makeBorderBlack(ip, pxToBorder);              
     }
 
 	private void dilation(ImageProcessor ip, int[][] se) {
@@ -108,17 +108,17 @@ public class Project5_PlugIn implements PlugInFilter {
 		int M = ip.getWidth();
 		ImageProcessor copy = ip.duplicate();
 		// vector to hold pixels from (2r+1)x(2r+1) neighborhood:
-		int[] A = new int[(2 * r + 1) * (2 * r + 1)];
+		int[] A = new int[(2 * radius + 1) * (2 * radius + 1)];
 		
 		// index of center vector element n = 2(r2 + r):
-		int n = 2 * (r * r + r);
+		int n = 2 * (radius * radius + radius);
 		
-		for (int u = r; u <= M - r - 2; u++) {
-			for (int v = r; v <= N - r - 2; v++) {
+		for (int u = radius; u <= M - radius - 2; u++) {
+			for (int v = radius; v <= N - radius - 2; v++) {
 				// fill the pixel vector A for filter position (u,v):
 				int k = 0;
-				for (int i = -r; i <= r; i++) {
-					for (int j = -r; j <= r; j++) {
+				for (int i = -radius; i <= radius; i++) {
+					for (int j = -radius; j <= radius; j++) {
 						A[k] = copy.getPixel(u + i, v + j);
 						k++;
 					}
@@ -130,4 +130,22 @@ public class Project5_PlugIn implements PlugInFilter {
 		}
 	}
 	
+	/**
+	 * paints the outer border (= everything not touched by the filters) of the picture black
+	 * @param ip image
+	 * @param pxToBorder width of the border (in pixel)
+	 */
+	private void makeBorderBlack(ImageProcessor ip, int pxToBorder) {
+		int height = ip.getHeight();
+		int width = ip.getWidth();
+		
+		for(int i = 0; i <= width; i++) {
+			for(int j = 0; j <= height; j++) {
+				if(i < pxToBorder || i >= (width - 1 - pxToBorder) || j < pxToBorder || j >= (height - 1 - pxToBorder)) {
+					ip.putPixel(i, j, BLACK);
+					// IJ.log("x: " + i + "  y: " + j + "  height: " + height + "  width: " + width);
+				}
+			}
+		}
+	}	
 }
