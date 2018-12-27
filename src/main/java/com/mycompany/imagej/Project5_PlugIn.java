@@ -12,9 +12,9 @@ public class Project5_PlugIn implements PlugInFilter {
 	final int WHITE = 255;
 	
 	// specifies the size of the filter as a radius (r = 1 --> 3x3)
-	final int radius = 3;	
+	final int radius = 1;	
 	// specifies the amount of pixel left to each border (before the filter begins)
-	int pxToBorder = 2;
+	int pxToBorder = 1;
 	 
 	final int [][] structure01 = {
 			{1,1,1},
@@ -43,13 +43,13 @@ public class Project5_PlugIn implements PlugInFilter {
         case 2:
         	erosion(ip, structure01);
         	dilation(ip, structure01);
-        	pxToBorder = 2;
+        	pxToBorder = 1;
             break;
         //Morpholohisches Schließen
         case 3:
         	dilation(ip, structure01);
         	erosion(ip, structure01);
-        	pxToBorder = 2;
+        	pxToBorder = 1;
         	break;
         default:       
         }
@@ -62,8 +62,8 @@ public class Project5_PlugIn implements PlugInFilter {
         int M = ip.getWidth();
         int N = ip.getHeight();
         
-        for (int u = 1; u <= M - 2; u++) {
-	        for (int v = 1; v <= N - 2; v++) {
+        for (int u = 1; u <= M - 1; u++) {
+	        for (int v = 1; v <= N - 1; v++) {
 		        // compute filter result for position (u,v):
 		        int max = 0;
 		        for (int i = -1; i <= 1; i++) {
@@ -85,8 +85,8 @@ public class Project5_PlugIn implements PlugInFilter {
         int M = ip.getWidth();
         int N = ip.getHeight();
         
-        for (int u = 1; u <= M - 2; u++) {
-	        for (int v = 1; v <= N - 2; v++) {
+        for (int u = 1; u <= M - 1; u++) {
+	        for (int v = 1; v <= N - 1; v++) {
 		        // compute filter result for position (u,v):
 		        int min = 300;
 		        for (int i = -1; i <= 1; i++) {
